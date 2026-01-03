@@ -1,0 +1,52 @@
+version: '2.4'
+
+services:
+  app:
+    build: .
+    container_name: healthtech-app
+    ports: 
+      - "8080:8080"
+    environment:
+      - DB_USER=root
+      - DB_PASSWORD=root
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_NAME=healthtech
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - UPLOAD_DIR=/uploads
+      - JWT_SECRET=supersecretkey
+    volumes:
+      - ./uploads:/uploads
+    depends_on:
+      - db
+      - redis
+    networks:
+      - healthtech-net
+  db: 
+    image: mysql:8.0
+    container_name: healthtech-db
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: healthtech
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./mysql/scripts.sql:/docker-entrypoint-scriptsdb.d/scripts.sql
+    networks:
+      - healthtech-net
+    command: --default-authentication-plugin=mysql_native_password
+
+  redis:
+    image: redis:7.0-alpine
+    container_name: healthtech-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - healthtech-net
+
+networks:
+  healthtech-net:
+    driver: bridge
+
